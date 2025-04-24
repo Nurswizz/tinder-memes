@@ -8,7 +8,7 @@ const Login = () => {
   return (
     <div className="flex flex-col items-center h-screen mt-10">
       <div className="flex flex-col items-center justify-center gap-10 ">
-        <span className="text-2xl font-bold text-[#969696]">Tinder Memes</span>
+        <span className="text-2xl font-bold text-[#969696]">MemeMatch</span>
         <span className="text-4xl font-bold text-[#FF2E63]">Login</span>
         <form className="flex flex-col gap-5 w-96 text-[#969696] max-w-[50vw] items-center">
           <input
