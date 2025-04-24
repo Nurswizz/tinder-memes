@@ -5,10 +5,10 @@ require("dotenv").config();
 
 const register = async (req, res) => {
   const { username, password, email } = req.body;
-  const role = "user";
-  const rank = "E";
-  const xp = 0;
-  const skills = [];
+  const likedMemes = [];
+  const dislikedMemes = [];
+  const savedMemes = [];
+
   if (!username || !password || !email) {
     return res.status(400).json({ message: "Please fill in all fields" });
   }
@@ -29,8 +29,15 @@ const register = async (req, res) => {
 
   await db
     .collection("users")
-    .insertOne({ username, hashedPassword, email, role, rank, skills, xp });
-  res.status(201).json({ message: "User created" });
+    .insertOne({
+      username,
+      hashedPassword,
+      email,
+      likedMemes,
+      dislikedMemes,
+      savedMemes,
+    });
+  return res.status(201).json({ message: "User created" });
 };
 
 const login = async (req, res) => {
@@ -55,7 +62,7 @@ const login = async (req, res) => {
   return res.status(200).json({
     token,
     message: "Logged in",
-    user: { id: user.id, username: user.username, rank: user.rank },
+    user: { id: user.id, username: user.username },
   });
 };
 
