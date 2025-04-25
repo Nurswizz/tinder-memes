@@ -1,47 +1,13 @@
 const { db } = require("../config/db");
 const userCollection = db.collection("users");
-
-const likeMeme = async (req, res) => {
-  const { likedMemes } = req.body;
-  const userId = req.user.id;
-
-  try {
-    const user = await userCollection.findOne({ _id: userId });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    const likedMemes = user.likedMemes || [];
-    if (likedMemes.includes(memeId)) {
-      return res.status(400).json({ message: "Meme already liked" });
-    }
-    likedMemes.push(memeId);
-    await userCollection.updateOne({ _id: userId }, { $set: { likedMemes } });
-
-    return res.status(200).json({ message: "Meme liked successfully" });
-  } catch (error) {
-    console.error("Error liking meme:", error);
-    return res.status(500).json({ message: "Error liking meme" });
-  }
-};
+const { ObjectId } = require("mongodb");
 
 const unlikeMeme = async (req, res) => {
   const { memeId } = req.body;
   const userId = req.user.id;
 
   try {
-    const user = await userCollection.findOne({ _id: userId });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    const likedMemes = user.likedMemes || [];
-    if (!likedMemes.includes(memeId)) {
-      return res.status(400).json({ message: "Meme not liked yet" });
-    }
-    const updatedLikedMemes = likedMemes.filter((id) => id !== memeId);
-    await userCollection.updateOne(
-      { _id: userId },
-      { $set: { likedMemes: updatedLikedMemes } }
-    );
+    //TODO
 
     return res.status(200).json({ message: "Meme unliked successfully" });
   } catch (error) {
@@ -50,51 +16,13 @@ const unlikeMeme = async (req, res) => {
   }
 };
 
-const dislikeMeme = async (req, res) => {
+
+const undislikeMeme = async (req, res) => {
   const { memeId } = req.body;
   const userId = req.user.id;
 
   try {
-    const user = await userCollection.findOne({ _id: userId });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    const dislikedMemes = user.dislikedMemes || [];
-    if (dislikedMemes.includes(memeId)) {
-      return res.status(400).json({ message: "Meme already disliked" });
-    }
-    dislikedMemes.push(memeId);
-    await userCollection.updateOne(
-      { _id: userId },
-      { $set: { dislikedMemes } }
-    );
-
-    return res.status(200).json({ message: "Meme disliked successfully" });
-  } catch (error) {
-    console.error("Error disliking meme:", error);
-    return res.status(500).json({ message: "Error disliking meme" });
-  }
-};
-
-const undislikeMeme = async (req, res) => {
-  const { memeId } = req.body;
-  const userId = req.user.id; // Assuming you have user authentication middleware that sets req.user
-
-  try {
-    const user = await userCollection.findOne({ _id: userId });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    const dislikedMemes = user.dislikedMemes || [];
-    if (!dislikedMemes.includes(memeId)) {
-      return res.status(400).json({ message: "Meme not disliked yet" });
-    }
-    const updatedDislikedMemes = dislikedMemes.filter((id) => id !== memeId);
-    await userCollection.updateOne(
-      { _id: userId },
-      { $set: { dislikedMemes: updatedDislikedMemes } }
-    );
-
+    //TODO
     return res.status(200).json({ message: "Meme undisliked successfully" });
   } catch (error) {
     console.error("Error undisliking meme:", error);
@@ -102,47 +30,13 @@ const undislikeMeme = async (req, res) => {
   }
 };
 
-const saveMeme = async (req, res) => {
-  const { memeId } = req.body;
-  const userId = req.user.id; // Assuming you have user authentication middleware that sets req.user
-
-  try {
-    const user = await userCollection.findOne({ _id: userId });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    const savedMemes = user.savedMemes || [];
-    if (savedMemes.includes(memeId)) {
-      return res.status(400).json({ message: "Meme already saved" });
-    }
-    savedMemes.push(memeId);
-    await userCollection.updateOne({ _id: userId }, { $set: { savedMemes } });
-
-    return res.status(200).json({ message: "Meme saved successfully" });
-  } catch (error) {
-    console.error("Error saving meme:", error);
-    return res.status(500).json({ message: "Error saving meme" });
-  }
-};
 
 const unsaveMeme = async (req, res) => {
   const { memeId } = req.body;
-  const userId = req.user.id; // Assuming you have user authentication middleware that sets req.user
+  const userId = req.user.id;
 
   try {
-    const user = await userCollection.findOne({ _id: userId });
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    const savedMemes = user.savedMemes || [];
-    if (!savedMemes.includes(memeId)) {
-      return res.status(400).json({ message: "Meme not saved yet" });
-    }
-    const updatedSavedMemes = savedMemes.filter((id) => id !== memeId);
-    await userCollection.updateOne(
-      { _id: userId },
-      { $set: { savedMemes: updatedSavedMemes } }
-    );
+    //TODO
 
     return res.status(200).json({ message: "Meme unsaved successfully" });
   } catch (error) {
@@ -151,11 +45,90 @@ const unsaveMeme = async (req, res) => {
   }
 };
 
+const saveMemes = async (req, res) => {
+  const { savedMemes = [], likedMemes = [], dislikedMemes = [] } = req.body;
+
+  if (!Array.isArray(savedMemes) || !Array.isArray(likedMemes) || !Array.isArray(dislikedMemes)) {
+    return res.status(400).json({ message: "Invalid request data: all meme fields must be arrays." });
+  }
+
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized: user ID missing." });
+  }
+
+  console.log("Saving memes for user:", userId);
+
+  try {
+    const user = await userCollection.findOne({ _id: new ObjectId(userId) });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const mergeUnique = (oldList, newList) => [...new Set([...(oldList || []), ...newList])];
+
+    const updatedSavedMemes = mergeUnique(user.savedMemes, savedMemes);
+    const updatedLikedMemes = mergeUnique(user.likedMemes, likedMemes);
+    const updatedDislikedMemes = mergeUnique(user.dislikedMemes, dislikedMemes);
+
+    const result = await userCollection.updateOne(
+      { _id: new ObjectId(userId) },
+      {
+        $set: {
+          savedMemes: updatedSavedMemes,
+          likedMemes: updatedLikedMemes,
+          dislikedMemes: updatedDislikedMemes,
+        },
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(304).json({ message: "No changes made to the user's memes." });
+    }
+
+    console.log("Memes updated successfully for user:", userId);
+    return res.status(200).json({ message: "Memes saved successfully" });
+  } catch (error) {
+    console.error("Error saving memes:", error);
+    return res.status(500).json({ message: "Internal server error while saving memes" });
+  }
+};
+
+const clearMemes = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized: user ID missing." });
+  }
+
+  try {
+    const result = await userCollection.updateOne(
+      { _id: new ObjectId(userId) },
+      {
+        $set: {
+          savedMemes: [],
+          likedMemes: [],
+          dislikedMemes: [],
+        },
+      }
+    );
+
+    if (result.modifiedCount === 0) {
+      return res.status(304).json({ message: "No changes made to the user's memes." });
+    }
+
+    console.log("All memes cleared successfully for user:", userId);
+    return res.status(200).json({ message: "All memes cleared successfully" });
+  } catch (error) {
+    console.error("Error clearing memes:", error);
+    return res.status(500).json({ message: "Internal server error while clearing memes" });
+  }
+};
+
 module.exports = {
-  likeMeme,
+  saveMemes,
   unlikeMeme,
-  dislikeMeme,
   undislikeMeme,
-  saveMeme,
   unsaveMeme,
+  clearMemes,
 };
