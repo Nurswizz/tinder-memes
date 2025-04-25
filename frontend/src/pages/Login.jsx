@@ -1,10 +1,54 @@
 import { useNavigate } from "react-router";
+import axios from "axios";
+import { useState } from "react";
 
 const Login = () => {
+  if (localStorage.getItem("token")) {
+    window.location.href = "/feed";
+  }
+  
   const navigate = useNavigate();
   const navigateTo = (path) => {
     navigate(path);
   };
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    if (!email || !password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}/auth/login`,
+        { email, password },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      const data = response.data;
+      if (response.status === 200) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        console.log(localStorage);
+        setLoading(true);
+        navigateTo("/feed");
+      }
+      else if (response.status === 401) {
+        setError("Invalid email or password.");
+      }
+    } catch (error) {
+      setError("An error occurred. Please try again later: " + error.message);
+    }
+  }
   return (
     <div className="flex flex-col items-center h-screen mt-10">
       <div className="flex flex-col items-center justify-center gap-10 ">
@@ -15,14 +59,21 @@ const Login = () => {
             type="email"
             placeholder="Email"
             className="border border-[#08D9D6] rounded-md p-2 placeholder-[#969696] "
+            onChange={(e) => {
+              setEmail(e.target.value);
+            }}
           />
           <input
             type="password"
             placeholder="Password"
             className="border border-[#08D9D6] rounded-md p-2 placeholder-[#969696]"
+            onChange={(e) => {
+              setPassword(e.target.value);
+            }}
           />
-          <button className="bg-[#FF2E63] min-w-[150px] text-white font-bold py-2 rounded-md hover:bg-[#08D9D6] transition duration-300 ease-in-out cursor-pointer">
-            Sign in
+          {error && <p className="text-red-500">{error}</p>}
+          <button className="bg-[#FF2E63] min-w-[150px] text-white font-bold py-2 rounded-md hover:bg-[#08D9D6] transition duration-300 ease-in-out cursor-pointer" onClick={handleLogin} disabled={loading}>
+            {loading ? "Loading..." : "Sign In"}
           </button>
         </form>
         <div className="text-[#969696] text-center" >

@@ -1,6 +1,49 @@
 import { useNavigate } from "react-router";
+import { useState } from "react";
+import axios from "axios";
 
 const Register = () => {
+  if (localStorage.getItem("token")) {
+    window.location.href = "/feed";
+  }
+  const [user, setUser] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
+
+  const handleRegister = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    if (!user.username || !user.email || !user.password) {
+      setError("Please fill in all fields.");
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_BACKEND_URL}/auth/register`, user, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+      );
+      const data = await response.json();
+      if (response.ok) {
+        navigateTo("/login");
+      } else {
+        setError(data.message || "Registration failed. Please try again.");
+      }
+    } catch (error) {
+      setError("An error occurred. Please try again later:" + error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
   const navigateTo = (path) => {
     navigate(path);
@@ -15,19 +58,29 @@ const Register = () => {
             type="text"
             placeholder="Username"
             className="border border-[#08D9D6] rounded-md p-2 placeholder-[#969696]"
+            onChange={(e) => {
+              setUser({ ...user, username: e.target.value });
+            }}
           />
           <input
             type="email"
             placeholder="Email"
             className="border border-[#08D9D6] rounded-md p-2 placeholder-[#969696] "
+            onChange={(e) => {
+              setUser({ ...user, email: e.target.value });
+            }}
           />
           <input
             type="password"
             placeholder="Password"
             className="border border-[#08D9D6] rounded-md p-2 placeholder-[#969696]"
+            onChange={(e) => {
+              setUser({ ...user, password: e.target.value });
+            }}
           />
-          <button className="bg-[#FF2E63] min-w-[150px] text-white font-bold py-2 rounded-md hover:bg-[#08D9D6] transition duration-300 ease-in-out cursor-pointer">
-            Sign up
+          {error && <p className="text-red-500">{error}</p>}
+          <button className="bg-[#FF2E63] min-w-[150px] text-white font-bold py-2 rounded-md hover:bg-[#08D9D6] transition duration-300 ease-in-out cursor-pointer" onClick={handleRegister} disabled={loading}>
+            {loading ? "Loading..." : "Sign Up"}
           </button>
         </form>
         <div className="text-[#969696] text-center" >

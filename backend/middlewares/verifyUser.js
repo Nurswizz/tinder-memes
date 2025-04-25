@@ -12,10 +12,17 @@ const verifyUser = async (req, res, next) => {
   }
   try {
     const user = jwt.verify(token, process.env.JWT_SECRET);
+    if (!user) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+
+    
     req.user = user;
     next();
   } catch (error) {
-    console.log(error);
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ message: "Token expired" });
+    }
     return res.status(401).json({ message: "Invalid token" });
   }
 };

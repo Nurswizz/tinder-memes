@@ -1,22 +1,36 @@
 const axios = require('axios');
-const db = require('../config/db'); 
+const {db} = require('../config/db');
+const usersCollection = db.collection('users');
+const { ObjectId } = require('mongodb'); // Import this at the top
 
 const getMeme = async (req, res) => {
-    const num = req.query.num || 1; 
-    if (isNaN(num) || num <= 0) {
-        return res.status(400).json({ message: 'Invalid number of memes requested' });
+    const url = `https://api.imgflip.com/get_memes`;
+    const userId = req.user.id; 
+
+    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    if (!user) {
+        return res.status(404).json({ message: 'User not found' });
     }
-    const url = `https://meme-api.com/gimme/${num}`;
+
+    const nextMemes = user.likedMemes + user.dislikedMemes;
+
     try {
         const response = await axios.get(url);
-        const memes = response.data.memes;
+        const memes = response.data.data.memes.slice(nextMemes, nextMemes + 10).map(meme => ({
+            id: meme.id,
+            name: meme.name,
+            url: meme.url,
+            width: meme.width,
+            height: meme.height
+        }));
         return res.status(200).json(memes);
     } catch (error) {
         console.error('Error fetching memes:', error);
-        return es.status(500).json({ message: 'Error fetching memes' });
+        return res.status(500).json({ message: 'Error fetching memes' });
     }
 }
 
+
 module.exports = {
-    getMeme,
+    getMeme
 }
