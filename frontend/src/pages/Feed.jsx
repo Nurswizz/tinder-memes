@@ -3,6 +3,7 @@ import Meme from "../components/Meme";
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 
 const Feed = () => {
   const [meme, setMeme] = useState(null);
@@ -92,8 +93,40 @@ const Feed = () => {
     setSavedMemes((prev) => [...prev, meme]);
     console.log("Saved meme");
   };
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (
+        likedMemes.length > 0 ||
+        dislikedMemes.length > 0 ||
+        savedMemes.length > 0
+      ) {
+        saveUserMemes();
+      } 
+    };
+  
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [likedMemes, dislikedMemes, savedMemes]);
+
+  
+const location = useLocation();
+useEffect(() => {
+  return () => {
+    // Called when route changes away from /feed
+    if (
+      likedMemes.length > 0 ||
+      dislikedMemes.length > 0 ||
+      savedMemes.length > 0
+    ) {
+      saveUserMemes();
+    }
+  };
+}, [location]);
+
+
   return (
-    <div className="h-screen bg-[#121212] flex flex-col items-center min-w-[100vw] overflow-hidden">
+    <div className="h-screen bg-[#121212] flex flex-col mx-auto items-center max-w-[50vw] overflow-hidden">
       <div className="flex flex-col items-center mt-10">
         <div className="flex flex-col items-center justify-center gap-10">
           <span className="text-2xl font-bold text-[#FF2E63]">MemeMatch</span>

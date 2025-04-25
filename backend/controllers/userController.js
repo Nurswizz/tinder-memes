@@ -1,6 +1,7 @@
 const { db } = require("../config/db");
 const userCollection = db.collection("users");
 const { ObjectId } = require("mongodb");
+const { get } = require("../routes/userRoutes");
 
 const unlikeMeme = async (req, res) => {
   const { memeId } = req.body;
@@ -125,10 +126,61 @@ const clearMemes = async (req, res) => {
   }
 };
 
+const getSavedMemes = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized: user ID missing." });
+  }
+
+  try {
+    console.log(userId);
+    const user = await userCollection.findOne({ _id: new ObjectId(userId) });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const savedMemes = user.savedMemes || [];
+
+    return res.status(200).json({ savedMemes });
+  } catch (error) {
+    console.error("Error fetching saved memes:", error);
+    return res.status(500).json({ message: "Internal server error while fetching saved memes" });
+  }
+}
+
+const getAllMemes = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized: user ID missing." });
+  }
+
+  try {
+    const user = await userCollection.findOne({ _id: new ObjectId(userId) });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const allMemes = {
+      savedMemes: user.savedMemes || [],
+      likedMemes: user.likedMemes || [],
+      dislikedMemes: user.dislikedMemes || [],
+    };
+
+    return res.status(200).json(allMemes);
+  } catch (error) {
+    console.error("Error fetching all memes:", error);
+    return res.status(500).json({ message: "Internal server error while fetching all memes" });
+  }
+};
+
 module.exports = {
   saveMemes,
   unlikeMeme,
   undislikeMeme,
   unsaveMeme,
   clearMemes,
+  getSavedMemes,
+  getAllMemes,
 };

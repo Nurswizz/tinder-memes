@@ -6,6 +6,8 @@ import Login from "./pages/Login";
 import PageNotFound from "./pages/PageNotFound";
 import Feed from "./pages/Feed";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Saved from "./pages/Saved";
+import Profile from "./pages/Profile";
 
 const App = () => {
   return (
@@ -23,11 +25,27 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/saved"
+            element={
+              <ProtectedRoute>
+                <Saved />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
       </BrowserRouter>
     </>
   );
-}
+};
 
 export default App;
