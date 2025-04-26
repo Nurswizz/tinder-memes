@@ -3,41 +3,25 @@ const userCollection = db.collection("users");
 const { ObjectId } = require("mongodb");
 const { get } = require("../routes/userRoutes");
 
-const unlikeMeme = async (req, res) => {
-  const { memeId } = req.body;
-  const userId = req.user.id;
-
-  try {
-    //TODO
-
-    return res.status(200).json({ message: "Meme unliked successfully" });
-  } catch (error) {
-    console.error("Error unliking meme:", error);
-    return res.status(500).json({ message: "Error unliking meme" });
-  }
-};
-
-
-const undislikeMeme = async (req, res) => {
-  const { memeId } = req.body;
-  const userId = req.user.id;
-
-  try {
-    //TODO
-    return res.status(200).json({ message: "Meme undisliked successfully" });
-  } catch (error) {
-    console.error("Error undisliking meme:", error);
-    return res.status(500).json({ message: "Error undisliking meme" });
-  }
-};
-
-
 const unsaveMeme = async (req, res) => {
-  const { memeId } = req.body;
+  const { memeId } = req.params;
   const userId = req.user.id;
 
   try {
-    //TODO
+    const user = await userCollection.findOne({ _id: new ObjectId(userId) });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const savedMemes = user.savedMemes || [];
+    const newSavedMemes = savedMemes.filter((meme) => meme.id !== memeId);
+    const result = await userCollection.updateOne(
+      { _id: new ObjectId(userId) },
+      { $set: { savedMemes: newSavedMemes } }
+    );
+    if (result.modifiedCount === 0) {
+      return res.status(304).json({ message: "No changes made to the user's saved memes." });
+    }
 
     return res.status(200).json({ message: "Meme unsaved successfully" });
   } catch (error) {
@@ -58,7 +42,7 @@ const saveMemes = async (req, res) => {
     return res.status(401).json({ message: "Unauthorized: user ID missing." });
   }
 
-  console.log("Saving memes for user:", userId);
+
 
   try {
     const user = await userCollection.findOne({ _id: new ObjectId(userId) });
@@ -88,7 +72,6 @@ const saveMemes = async (req, res) => {
       return res.status(304).json({ message: "No changes made to the user's memes." });
     }
 
-    console.log("Memes updated successfully for user:", userId);
     return res.status(200).json({ message: "Memes saved successfully" });
   } catch (error) {
     console.error("Error saving memes:", error);
@@ -118,7 +101,6 @@ const clearMemes = async (req, res) => {
       return res.status(304).json({ message: "No changes made to the user's memes." });
     }
 
-    console.log("All memes cleared successfully for user:", userId);
     return res.status(200).json({ message: "All memes cleared successfully" });
   } catch (error) {
     console.error("Error clearing memes:", error);
@@ -133,7 +115,6 @@ const getSavedMemes = async (req, res) => {
   }
 
   try {
-    console.log(userId);
     const user = await userCollection.findOne({ _id: new ObjectId(userId) });
 
     if (!user) {
@@ -177,8 +158,6 @@ const getAllMemes = async (req, res) => {
 
 module.exports = {
   saveMemes,
-  unlikeMeme,
-  undislikeMeme,
   unsaveMeme,
   clearMemes,
   getSavedMemes,

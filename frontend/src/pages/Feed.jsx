@@ -2,8 +2,9 @@ import Navbar from "../components/Navbar";
 import Meme from "../components/Meme";
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { Alert } from "@mui/material";
+import CheckIcon from "@mui/icons-material/Check";
 
 const Feed = () => {
   const [meme, setMeme] = useState(null);
@@ -11,11 +12,20 @@ const Feed = () => {
   const [likedMemes, setLikedMemes] = useState([]);
   const [dislikedMemes, setDislikedMemes] = useState([]);
   const [savedMemes, setSavedMemes] = useState([]);
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   const navigate = useNavigate();
+  const location = useLocation();
 
-  const saveUserMemes = async () => {
-    if (likedMemes.length === 0 && dislikedMemes.length === 0 && savedMemes.length === 0) return;
+  const saveUserMemes = useCallback(async () => {
+    if (
+      likedMemes.length === 0 &&
+      dislikedMemes.length === 0 &&
+      savedMemes.length === 0
+    )
+      return;
+
     try {
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/user/memes`,
@@ -35,16 +45,34 @@ const Feed = () => {
     } catch (error) {
       console.error("Failed to save memes:", error);
     }
+  }, [likedMemes, dislikedMemes, savedMemes]);
+
+  const sendMemesOnUnload = () => {
+    if (
+      likedMemes.length === 0 &&
+      dislikedMemes.length === 0 &&
+      savedMemes.length === 0
+    )
+      return;
+
+    const payload = JSON.stringify({ likedMemes, dislikedMemes, savedMemes });
+    navigator.sendBeacon(
+      `${import.meta.env.VITE_BACKEND_URL}/user/memes`,
+      new Blob([payload], { type: "application/json" })
+    );
   };
 
   const fetchMemes = useCallback(async () => {
     try {
-      const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/meme`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
+      const response = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}/meme`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
 
       const data = response.data || [];
       setMemesList(data);
@@ -89,41 +117,58 @@ const Feed = () => {
 
   const onLike = () => handleNextMeme("like");
   const onDislike = () => handleNextMeme("dislike");
-  const onSave = () => {
-    setSavedMemes((prev) => [...prev, meme]);
-    console.log("Saved meme");
+  const onSave = async () => {
+    const response = await axios.get(
+      `${import.meta.env.VITE_BACKEND_URL}/user/memes/saved`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      }
+    )
+
+    const savedMemesInDb = response.data.savedMemes || [];
+
+    if (savedMemesInDb.some((m) => m.id === meme.id)) {
+      await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL}/user/memes/saved/${meme.id}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      setAlertMessage("Meme was unsaved!");
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 2000);
+      return
+    }
+
+    if (savedMemes.some((m) => m.id === meme.id)) {
+      setSavedMemes((prev) => prev.filter((m) => m.id !== meme.id));
+      setShowAlert(true);
+      setAlertMessage("Meme was unsaved!");
+    } else {
+      setSavedMemes((prev) => [...prev, meme]);
+      setShowAlert(true);
+      setAlertMessage("Meme saved successfully!");
+    }
+    setTimeout(() => setShowAlert(false), 2000);
   };
 
   useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (
-        likedMemes.length > 0 ||
-        dislikedMemes.length > 0 ||
-        savedMemes.length > 0
-      ) {
-        saveUserMemes();
-      } 
-    };
-  
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("beforeunload", sendMemesOnUnload);
+    return () => window.removeEventListener("beforeunload", sendMemesOnUnload);
   }, [likedMemes, dislikedMemes, savedMemes]);
 
-  
-const location = useLocation();
-useEffect(() => {
-  return () => {
-    // Called when route changes away from /feed
-    if (
-      likedMemes.length > 0 ||
-      dislikedMemes.length > 0 ||
-      savedMemes.length > 0
-    ) {
-      saveUserMemes();
-    }
-  };
-}, [location]);
-
+  useEffect(() => {
+    return () => {
+      saveUserMemes(); // no await here because cleanup cannot be async
+    };
+  }, [location, saveUserMemes]);
 
   return (
     <div className="h-screen bg-[#121212] flex flex-col mx-auto items-center max-w-[50vw] overflow-hidden">
@@ -132,6 +177,21 @@ useEffect(() => {
           <span className="text-2xl font-bold text-[#FF2E63]">MemeMatch</span>
           <span className="text-4xl font-bold text-[#969696]">Feed</span>
           <div className="flex flex-col gap-5 w-96 text-[#969696] max-w-[50vw] items-center">
+            {showAlert && (
+              <Alert
+                className="absolute z-10"
+                icon={<CheckIcon fontSize="inherit" />}
+                severity="success"
+              >
+                {alertMessage}
+                <span
+                  className="absolute top-2 right-2 cursor-pointer"
+                  onClick={() => setShowAlert(false)}
+                >
+                  &times;
+                </span>
+              </Alert>
+            )}
             {meme ? (
               <Meme
                 meme={meme}
