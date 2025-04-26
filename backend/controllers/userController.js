@@ -1,7 +1,7 @@
 const { db } = require("../config/db");
 const userCollection = db.collection("users");
 const { ObjectId } = require("mongodb");
-const { get } = require("../routes/userRoutes");
+
 
 const unsaveMeme = async (req, res) => {
   const { memeId } = req.params;
@@ -156,10 +156,53 @@ const getAllMemes = async (req, res) => {
   }
 };
 
+const getUserSuggestions = async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ message: "Unauthorized: user ID missing." });
+  }
+
+  try {
+    const user = await userCollection.findOne({ _id: new ObjectId(userId) });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const likedMemes = user.likedMemes || [];
+
+    if (likedMemes.length < 10) {
+      return res.status(200).json({ suggestions: [], message: "Not enough liked memes to find suggestions" });
+    }
+
+    const similarUsers = await userCollection.find({
+      likedMemes: { $in: likedMemes },
+      _id: { $ne: new ObjectId(userId) },
+    }).toArray();
+
+    const suggestions = similarUsers.map(similarUser => ({
+      id: similarUser._id,
+      username: similarUser.username,
+      email: similarUser.email,
+      savedMemes: similarUser.savedMemes || [],
+      likedMemes: similarUser.likedMemes || [],
+      dislikedMemes: similarUser.dislikedMemes || [],
+    }));
+    if (suggestions.length === 0) {
+      return res.status(200).json({ suggestions: [], message: "No suggestions found" });
+    }
+    return res.status(200).json({ suggestions });
+  } catch (error) {
+    console.error("Error fetching user suggestions:", error);
+    return res.status(500).json({ message: "Internal server error while fetching user suggestions" });
+  }
+}
+
 module.exports = {
   saveMemes,
   unsaveMeme,
   clearMemes,
   getSavedMemes,
   getAllMemes,
+  getUserSuggestions,
 };
