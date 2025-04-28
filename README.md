@@ -15,13 +15,13 @@ git clone https://github.com/yourusername/tinder-memes.git
 cd tinder-memes
 ```
 ### 2. Установка зависимостей
-## Backend
+### Backend
 Перейдите в директорию backend и установите зависимости:
 ```bash
 cd backend
 npm install
 ```
-## Frontend
+### Frontend
 Перейдите в директорию frontend и установите зависимости:
 ```bash
 cd frontend
@@ -34,7 +34,7 @@ JWT_SECRET=your-jwt-secret
 ```
 
 ### 4. Запуск локально
-## Backend
+### Backend
 Для запуска backend:
 
 ```bash
@@ -44,7 +44,7 @@ node index.js
 Сервер будет доступен по адресу http://localhost:5000
 
 
-## Frontend
+### Frontend
 Для запуска frontend:
 ```bash
 cd frontend
@@ -59,12 +59,12 @@ npm run dev
 docker-compose up --build
 ```
 
-## Доступ к приложению
+### Доступ к приложению
 Backend: http://localhost:5000
 
 Frontend: http://localhost:3000
 
-## Остановка приложения
+### Остановка приложения
 ```bash 
 docker-compose down
 ```
