@@ -22,7 +22,7 @@ const Feed = () => {
   const auth = useAuth();
 
   if (!auth.isAuthenticated) {
-    navigate("/login", { replace: true });
+    navigate("/login");
   }
 
   const saveUserMemes = useCallback(async () => {

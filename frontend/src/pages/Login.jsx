@@ -1,16 +1,18 @@
 import { useNavigate } from "react-router";
 import axios from "axios";
 import { useState } from "react";
-
+import useAuth from "../hooks/useAuth";
 const Login = () => {
-  if (localStorage.getItem("token")) {
-    window.location.href = "/feed";
-  }
   
+  const auth = useAuth();
   const navigate = useNavigate();
   const navigateTo = (path) => {
     navigate(path);
   };
+
+  if (auth.isAuthenticated) {
+    navigateTo("/feed");
+  }
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
