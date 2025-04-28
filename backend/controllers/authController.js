@@ -14,13 +14,12 @@ const register = async (req, res) => {
   }
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
-
-  const user = await db.collection("users").findOne({ username });
+  const user = await db.collection("users").findOne({ username: username.toLowerCase() });
   if (user) {
     console.log("Username already exists");
     return res.status(400).json({ message: "Username already exists" });
   }
-  const emailExists = await db.collection("users").findOne({ email });
+  const emailExists = await db.collection("users").findOne({ email: email.toLowerCase() });
 
   if (emailExists) {
     console.log("Email already exists");
@@ -43,7 +42,7 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   const { email, password } = req.body;
 
-  const user = await db.collection("users").findOne({ email });
+  const user = await db.collection("users").findOne({ email: email.toLowerCase() });
 
   if (!user) {
     return res.status(400).json({ message: "Invalid email" });
@@ -52,7 +51,7 @@ const login = async (req, res) => {
   const validPassword = await bcrypt.compare(password, user.hashedPassword);
 
   if (!validPassword) {
-    return res.status(401).json({ message: "Invalid password" });
+    return res.status(400).json({ message: "Invalid password" });
   }
 
   const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {

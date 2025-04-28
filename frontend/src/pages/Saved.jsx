@@ -55,10 +55,10 @@ const Saved = () => {
     fetchSavedMemes();
   }, []);
 
-  const handleDelete = async (memeId) => {
+  const handleDelete = async (memeUrl) => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/user/memes/saved/${memeId}`,
+        `${import.meta.env.VITE_BACKEND_URL}/user/memes/saved/${memeUrl}`,
         {
           method: "DELETE",
           headers: {
@@ -69,7 +69,7 @@ const Saved = () => {
       );
       if (!response.ok) throw new Error("Failed to delete saved meme");
       setSavedMemes((prevMemes) =>
-        prevMemes.filter((meme) => meme.id !== memeId)
+        prevMemes.filter((meme) => meme.url !== memeUrl)
       );
       setShowAlert(true);
       setTimeout(() => {
@@ -113,7 +113,7 @@ const Saved = () => {
           ) : (
             savedMemes.map((meme) => (
               <div
-                key={meme.id}
+                key={meme.url}
                 className="bg-white shadow-md rounded-lg overflow-hidden cursor-pointer relative"
                 onClick={() => handleOpen(meme)}
               >

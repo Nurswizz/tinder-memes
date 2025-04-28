@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Book, Bookmark } from "lucide-react";
+import { Book, Bookmark, Bot } from "lucide-react";
 import { Home } from "lucide-react";
 import { User2 } from "lucide-react";
 const Navbar = () => {
@@ -18,6 +18,14 @@ const Navbar = () => {
           pathname: "/profile",
           state: { fromFeed: true }
         }}> <User2 /></Link>
+        <Link to={{
+          pathname: "/suggestions",
+          state: { fromFeed: true }
+        }}><Book /></Link>
+        <Link to={{
+          pathname: "/bot",
+          state: { fromFeed: true } 
+        }}><Bot /></Link>
       </li>
     </ul>
   </nav>;

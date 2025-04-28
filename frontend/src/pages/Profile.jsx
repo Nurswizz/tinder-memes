@@ -3,10 +3,12 @@ import { useState } from "react";
 import { useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
 
 const Profile = () => {
   const navigate = useNavigate();
-  if (!localStorage.getItem("token")) {
+  const auth = useAuth();
+  if (!auth.isAuthenticated) {
     navigate("/login");
   }
   const user = JSON.parse(localStorage.getItem("user"));
@@ -26,10 +28,15 @@ const Profile = () => {
           }
         );
         const data = response.data;
-        console.log(data);
         setMemes(data);
       } catch (error) {
         console.error(error);
+        if (error.response.status === 401) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+        }
+
       } finally {
         setLoading(false);
       }
@@ -40,6 +47,7 @@ const Profile = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    navigate("/login");
   }
 
   return (
@@ -64,25 +72,25 @@ const Profile = () => {
                   <h3 className="text-lg font-semibold text-[#FF2E63]">
                     Saved Memes
                   </h3>
-                  <p className="text-[#969696]">{memes.savedMemes.length}</p>
+                  <p className="text-[#969696]">{memes.savedMemes?.length}</p>
                 </div>
                 <div className="bg-[#0e0e0f] rounded-lg p-4 border-[1px] border-[#08D9D6] shadow-md max-w-[150px]">
                   <h3 className="text-lg font-semibold text-[#FF2E63]">
                     Liked Memes
                   </h3>
-                  <p className="text-[#969696]">{memes.likedMemes.length}</p>
+                  <p className="text-[#969696]">{memes.likedMemes?.length}</p>
                 </div>
                 <div className="bg-[#0e0e0f] rounded-lg p-4 border-[1px] border-[#08D9D6] shadow-md max-w-[150px]">
                   <h3 className="text-lg font-semibold text-[#FF2E63]">
                     Disliked Memes
                   </h3>
-                  <p className="text-[#969696]">{memes.dislikedMemes.length}</p>
+                  <p className="text-[#969696]">{memes.dislikedMemes?.length}</p>
                 </div>
                 <div className="bg-[#0e0e0f] rounded-lg p-4 border-[1px] border-[#08D9D6] shadow-md max-w-[150px]">
                   <h3 className="text-lg font-semibold text-[#FF2E63]">
                     Total Swipes
                   </h3>
-                  <p className="text-[#969696]">{memes.dislikedMemes.length + memes.likedMemes.length}</p>
+                  <p className="text-[#969696]">{memes.dislikedMemes?.length + memes.likedMemes?.length}</p>
                 </div>
               </div>
               

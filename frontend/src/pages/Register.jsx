@@ -14,6 +14,14 @@ const Register = () => {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (!/\S+@\S+\.\S+/.test(user.email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (user.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
     setLoading(true);
     setError(null);
     if (!user.username || !user.email || !user.password) {
@@ -28,13 +36,17 @@ const Register = () => {
         },
       }
       );
-      const data = await response.json();
+      const data = response.data;
       if (response.ok) {
         navigateTo("/login");
       } else {
         setError(data.message || "Registration failed. Please try again.");
       }
     } catch (error) {
+      if (error.response.status === 400) {
+        setError("User already exists.");
+        return;
+      }
       setError("An error occurred. Please try again later:" + error.message);
     } finally {
       setLoading(false);
@@ -94,4 +106,3 @@ const Register = () => {
 
 export default Register;
 
-// color #969696

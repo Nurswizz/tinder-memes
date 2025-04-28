@@ -3,8 +3,9 @@ import Meme from "../components/Meme";
 import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Alert } from "@mui/material";
+import { Alert, Backdrop } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
+import useAuth from "../hooks/useAuth";
 
 const Feed = () => {
   const [meme, setMeme] = useState(null);
@@ -14,18 +15,18 @@ const Feed = () => {
   const [savedMemes, setSavedMemes] = useState([]);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
+  const [openBackdrop, setOpenBackdrop] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
+  const auth = useAuth();
+
+  if (!auth.isAuthenticated) {
+    navigate("/login", { replace: true });
+  }
 
   const saveUserMemes = useCallback(async () => {
-    if (
-      likedMemes.length === 0 &&
-      dislikedMemes.length === 0 &&
-      savedMemes.length === 0
-    )
-      return;
-
+    if (likedMemes.length === 0 && dislikedMemes.length === 0 && savedMemes.length === 0) return;
     try {
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/user/memes`,
@@ -37,8 +38,6 @@ const Feed = () => {
           },
         }
       );
-      console.log("User meme actions saved to DB");
-
       setLikedMemes([]);
       setDislikedMemes([]);
       setSavedMemes([]);
@@ -48,13 +47,7 @@ const Feed = () => {
   }, [likedMemes, dislikedMemes, savedMemes]);
 
   const sendMemesOnUnload = () => {
-    if (
-      likedMemes.length === 0 &&
-      dislikedMemes.length === 0 &&
-      savedMemes.length === 0
-    )
-      return;
-
+    if (likedMemes.length === 0 && dislikedMemes.length === 0 && savedMemes.length === 0) return;
     const payload = JSON.stringify({ likedMemes, dislikedMemes, savedMemes });
     navigator.sendBeacon(
       `${import.meta.env.VITE_BACKEND_URL}/user/memes`,
@@ -73,11 +66,9 @@ const Feed = () => {
           },
         }
       );
-
       const data = response.data || [];
       setMemesList(data);
       setMeme(data[0] || null);
-
       await Promise.all(
         data.map((meme) => {
           return new Promise((resolve) => {
@@ -87,7 +78,6 @@ const Feed = () => {
           });
         })
       );
-      console.log("All meme images preloaded");
     } catch (error) {
       console.error("Error fetching memes:", error);
       if (error.response?.status === 401) {
@@ -105,10 +95,8 @@ const Feed = () => {
     const updatedMemesList = memesList.slice(1);
     setMemesList(updatedMemesList);
     setMeme(updatedMemesList[0] || null);
-
     if (actionType === "like") setLikedMemes((prev) => [...prev, meme]);
     if (actionType === "dislike") setDislikedMemes((prev) => [...prev, meme]);
-
     if (updatedMemesList.length === 0) {
       await saveUserMemes();
       await fetchMemes();
@@ -126,7 +114,8 @@ const Feed = () => {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       }
-    )
+    );
+
 
     const savedMemesInDb = response.data.savedMemes || [];
 
@@ -140,22 +129,20 @@ const Feed = () => {
           },
         }
       );
-
       setAlertMessage("Meme was unsaved!");
       setShowAlert(true);
       setTimeout(() => setShowAlert(false), 2000);
-      return
+      return;
     }
 
     if (savedMemes.some((m) => m.id === meme.id)) {
       setSavedMemes((prev) => prev.filter((m) => m.id !== meme.id));
-      setShowAlert(true);
       setAlertMessage("Meme was unsaved!");
     } else {
       setSavedMemes((prev) => [...prev, meme]);
-      setShowAlert(true);
       setAlertMessage("Meme saved successfully!");
     }
+    setShowAlert(true);
     setTimeout(() => setShowAlert(false), 2000);
   };
 
@@ -166,12 +153,20 @@ const Feed = () => {
 
   useEffect(() => {
     return () => {
-      saveUserMemes(); // no await here because cleanup cannot be async
+      saveUserMemes();
     };
   }, [location, saveUserMemes]);
 
+  const handleMemeClick = () => {
+    setOpenBackdrop(true);
+  };
+
+  const handleBackdropClose = () => {
+    setOpenBackdrop(false);
+  };
+
   return (
-    <div className="h-screen bg-[#121212] flex flex-col mx-auto items-center max-w-[50vw] overflow-hidden">
+    <div className="h-screen bg-[#121212] flex flex-col mx-auto items-center max-w-[50vw] overflow-hidden relative">
       <div className="flex flex-col items-center mt-10">
         <div className="flex flex-col items-center justify-center gap-10">
           <span className="text-2xl font-bold text-[#FF2E63]">MemeMatch</span>
@@ -193,12 +188,14 @@ const Feed = () => {
               </Alert>
             )}
             {meme ? (
-              <Meme
-                meme={meme}
-                onDislike={onDislike}
-                onLike={onLike}
-                onSave={onSave}
-              />
+              <div onClick={handleMemeClick} className="cursor-pointer">
+                <Meme
+                  meme={meme}
+                  onDislike={onDislike}
+                  onLike={onLike}
+                  onSave={onSave}
+                />
+              </div>
             ) : (
               <div className="text-[#969696] text-center">
                 No more memes available
@@ -208,6 +205,19 @@ const Feed = () => {
         </div>
       </div>
       <Navbar />
+      <Backdrop
+        open={openBackdrop}
+        onClick={handleBackdropClose}
+        sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+      >
+        {meme && (
+          <img
+            src={meme.url}
+            alt="Full Meme"
+            className="max-w-full max-h-full object-contain"
+          />
+        )}
+      </Backdrop>
     </div>
   );
 };

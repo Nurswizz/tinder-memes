@@ -24,6 +24,15 @@ const Login = () => {
       setError("Please fill in all fields.");
       return;
     }
+
+    if (!/\S+@\S+\.\S+/.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/auth/login`,
@@ -38,15 +47,16 @@ const Login = () => {
       if (response.status === 200) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        console.log(localStorage);
         setLoading(true);
         navigateTo("/feed");
       }
-      else if (response.status === 401) {
-        setError("Invalid email or password.");
+      else {
+        console.log(data.message);
+        setError(data.message || "Login failed. Please try again.");
       }
+        
     } catch (error) {
-      setError("An error occurred. Please try again later: " + error.message);
+      setError(error.response.data.message || "Login failed. Please try again.");
     }
   }
   return (

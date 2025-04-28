@@ -8,6 +8,8 @@ import Feed from "./pages/Feed";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Saved from "./pages/Saved";
 import Profile from "./pages/Profile";
+import Suggestions from "./pages/Suggestions";
+import Bot from "./pages/Bot";
 
 const App = () => {
   return (
@@ -38,6 +40,22 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/suggestions"
+            element={
+              <ProtectedRoute>
+                <Suggestions />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bot"
+            element={
+              <ProtectedRoute>
+                <Bot />
               </ProtectedRoute>
             }
           />

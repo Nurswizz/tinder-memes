@@ -62,22 +62,30 @@ function Meme({ meme, onLike, onDislike, onSave }) {
         Like
       </motion.div>
 
-
       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-6 pointer-events-auto z-10">
         <button
-          onClick={() => onDislike?.(meme)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onDislike?.(meme);
+          }}
           className="flex items-center justify-center w-14 h-14 rounded-full bg-[#08D9D6] text-[#121212] hover:scale-110 transition active:scale-95"
         >
           <X size={32} />
         </button>
         <button
-          onClick={() => onLike?.(meme)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onLike?.(meme);
+          }}
           className="flex items-center justify-center w-14 h-14 rounded-full bg-[#FF2E63] text-white hover:scale-110 transition active:scale-95"
         >
           <Heart size={28} />
         </button>
         <button
-          onClick={() => onSave?.(meme)}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSave?.(meme);
+          }}
           className="flex items-center justify-center w-14 h-14 rounded-full bg-[#08D9D6] text-[#121212] hover:scale-110 transition active:scale-95"
         >
           <Bookmark size={28} />
