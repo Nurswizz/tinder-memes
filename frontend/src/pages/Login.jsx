@@ -48,6 +48,7 @@ const Login = () => {
                 }
             );
             const data = response.data;
+            console.log("URL": `${import.meta.env.VITE_BACKEND_URL}/auth/login`); // Debug
             console.log("Login response:", data); // Debug
 
             if (response.status === 200) {
