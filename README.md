@@ -51,7 +51,7 @@ cd frontend
 npm run dev
 ```
 
-### Запуск с помощью Docker Compose 
+## Запуск с помощью Docker Compose 
 Убедитесь, что у вас установлен Docker и Docker Compose на вашем компьютере.
 
 Для того чтобы запустить все сервисы (backend & frontend ) с использованием Docker Compose, выполните команду:
