@@ -2,7 +2,7 @@ FROM node:23-slim
 
 WORKDIR /app
 
-COPY backend/package*.json ./
+COPY ./package*.json ./
 RUN npm install
 
 COPY . ./
