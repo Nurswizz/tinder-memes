@@ -1,16 +1,25 @@
 import { useNavigate } from "react-router";
 import { useState } from "react";
 import axios from "axios";
-
+import useAuth from "../hooks/useAuth";
 const Register = () => {
-  if (localStorage.getItem("token")) {
-    window.location.href = "/feed";
-  }
+  const auth = useAuth();
+
   const [user, setUser] = useState({
     username: "",
     email: "",
     password: "",
   });
+
+  const navigate = useNavigate();
+  
+  const navigateTo = (path) => {
+    navigate(path);
+  };
+
+  if (auth.isAuthenticated) {
+    navigate("/feed");
+  }
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -56,10 +65,7 @@ const Register = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const navigate = useNavigate();
-  const navigateTo = (path) => {
-    navigate(path);
-  };
+
   return (
     <div className="flex flex-col items-center h-screen mt-10">
       <div className="flex flex-col items-center justify-center gap-10 ">
