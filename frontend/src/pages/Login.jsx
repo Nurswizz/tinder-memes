@@ -48,8 +48,8 @@ const Login = () => {
                 }
             );
             const data = response.data;
-            console.log("URL", `${import.meta.env.VITE_BACKEND_URL}/auth/login`); // Debug
-            console.log("Login response:", data); // Debug
+            console.log("URL", `${import.meta.env.VITE_BACKEND_URL}/auth/login`); 
+            console.log("Login response:", data); 
 
             if (response.status === 200) {
                 if (data.token && typeof data.user === "object" && data.user !== null) {
